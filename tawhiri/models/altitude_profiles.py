@@ -57,12 +57,13 @@ class AltitudeProfile(object):
 class Linear(AltitudeProfile):
     """Constant speed ascent (or descent), at `speed` metres per second"""
 
-    def __init__(self, speed):
+    def __init__(self, speed, initial_altitude=0):
+        self.initial_altitude = initial_altitude
         self.speed = speed
 
     def __call__(self, time):
         """``time.item_time * self.speed``"""
-        return time.item_time * self.speed
+        return self.initial_altitude + time.item_time * self.speed
 
 class SimpleParachuteDescent(AltitudeProfile):
     """Not yet implemented"""

@@ -43,7 +43,7 @@ is a ``(latitude, longitude, altitude)`` tuple (decimal degrees, metres) and
     Run a prediction (example function)
 
     :type initial_conditions: :class:`tawhiri.InitialConditions`
-    :param initial_conditions: Initial location and time
+    :param initial_conditions: Initial ``((lat, lon, alt), time)``
     :type model: a *horizontal* model
     :param model: The model to use (ODE to solve)
     :type termination_condition: a termination conditon
@@ -75,7 +75,7 @@ something like::
     Run a prediction (example function)
 
     :type initial_conditions: :class:`tawhiri.InitialConditions`
-    :param initial_conditions: Initial location and time
+    :param initial_conditions: Initial ``((lat, lon), time)``
     :type model: a *horizontal* model
     :param model: The model to use (ODE to solve)
     :type altitude_profile: an altitude profile

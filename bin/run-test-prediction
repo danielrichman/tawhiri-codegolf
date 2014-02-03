@@ -21,7 +21,7 @@ alt_profile = Linear(5)
 
 config = Configuration(solver, model, term_cond, alt_profile)
 
-initial_conds = InitialConditions((52, 0, 0), datetime.utcnow())
+initial_conds = InitialConditions((52, 0), datetime.utcnow())
 data = decimate(config.run(initial_conds), nth=60)
 
 dump = []

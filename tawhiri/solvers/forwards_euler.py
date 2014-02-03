@@ -57,8 +57,9 @@ class ForwardsEulerWithAP(Solver):
 
     def __call__(self, initial_conditions, model, altitude_profile,
                        termination_function):
-        x = np.array(initial_conditions.x, dtype='float')
         t = Time.from_initial_conditions(initial_conditions, 0)
+        ics = tuple(initial_conditions.x) + (altitude_profile(t), )
+        x = np.array(ics, dtype='float')
 
         while True:
             if termination_function(x, t):
