@@ -35,7 +35,7 @@ from datetime import datetime
 import numpy as np
 
 
-__all__ = ["Dataset", "unpack_grib"]
+__all__ = ["Dataset", "unpack_all_gribmirrors", "unpack_grib"]
 
 
 logger = logging.getLogger("tawhiri.wind")
