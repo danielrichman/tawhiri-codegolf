@@ -22,7 +22,9 @@ Forwards Euler Integration
 
 from __future__ import unicode_literals, print_function, division
 
-from . import Solver
+import numpy as np
+
+from . import Solver, wrap_longitude
 from .. import Time
 
 
@@ -33,19 +35,16 @@ class ForwardsEuler(Solver):
         self.dt = dt
 
     def __call__(self, initial_conditions, model, termination_function):
-        raise NotImplementedError
-
-        # something like this?
-        x = initial_conditions.x
+        x = np.array(initial_conditions.x, dtype='float')
         t = Time.from_initial_conditions(initial_conditions, 0)
 
         while True:
             if termination_function(x, t):
                 break
 
-            x_dot = model(x, t)
-            for i in range(3):
-                x[i] += x_dot[i] * self.dt
+            x_dot = np.array(model(x, t))
+            x += x_dot * self.dt
+            x[1] = wrap_longitude(x[1])
             t += self.dt
 
             yield x, t
@@ -58,4 +57,19 @@ class ForwardsEulerWithAP(Solver):
 
     def __call__(self, initial_conditions, model, altitude_profile,
                        termination_function):
-        raise NotImplementedError
+        x = np.array(initial_conditions.x, dtype='float')
+        t = Time.from_initial_conditions(initial_conditions, 0)
+
+        while True:
+            if termination_function(x, t):
+                break
+
+            x_dot = np.array(model(x, t))
+            assert x_dot[2] == 0
+
+            x += x_dot * self.dt
+            x[1] = wrap_longitude(x[1])
+            x[2] = altitude_profile(t)
+            t += self.dt
+
+            yield x, t

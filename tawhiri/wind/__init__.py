@@ -29,12 +29,30 @@ import logging
 from collections import namedtuple
 import os
 import os.path
+import itertools
+import warnings
 from datetime import datetime
+import numpy as np
 
 
 __all__ = ["Dataset", "unpack_grib"]
 
 logger = logging.getLogger("tawhiri.wind")
+
+
+class OutOfRangeError(LookupError):
+    """A variable was out of range (when interpolating)."""
+    def __init__(self, variable, value):
+        super(OutOfRangeError, self).__init__(variable, value)
+        self.variable = variable
+        self.value = value
+
+class OutOfRangeWarning(Warning):
+    """A variable was out of range, and so had to be extrapolated."""
+    def __init__(self, altitude, lerp):
+        super(OutOfRangeWarning, self).__init__()
+        self.altitude = altitude
+        self.lerp = lerp
 
 
 class Dataset(object):
@@ -163,6 +181,72 @@ class Dataset(object):
         # float64? Would float32 not suffice?
         self.array = np.memmap(self.fn, mode=('w+' if self.new else 'r'),
                                dtype=np.float64, shape=self.shape, order='C')
+
+    def interpolate(self, hour, latitude, longitude, altitude):
+        """
+        Return a (u, v) tuple for the specified point by interpolating.
+        
+        The units of `hour`, `latitude`, `longitude` are the same as that of
+        the dataset, which crucially means that time is specified as a
+        fraction of a hour into the dataset.
+
+        `altitude` is in metres (units of the dataset "height" measurement),
+        two pressure levels will be chosen around it.
+        """
+
+        def _pick(name, value, left, step, n):
+            a = (value - left) / step
+            b = int(a)
+            if not 0 <= b < n - 1:
+                raise OutOfRangeError(name, value)
+            l = a - b
+            return (b, 1 - l), (b + 1, l)
+
+        ipl_hour = _pick("hour", hour, 0, 3, self.shape[0])
+        ipl_lat  = _pick("latitude", latitude, -90, 0.5, self.shape[3])
+        ipl_lon  = _pick("longitude", longitude, 0, 0.5, self.shape[4] + 1)
+        if ipl_lon[0][0] == self.shape[4] - 1:
+            left, (idx, lerp) = ipl_lon
+            ipl_lon = left, (0, lerp)
+
+        assert self.axes.hour[ipl_hour[0][0]] <= hour <= self.axes.hour[ipl_hour[1][0]]
+        assert self.axes.latitude[ipl_lat[0][0]] <= latitude <= self.axes.latitude[ipl_lat[1][0]]
+        if ipl_lon[1][0] == 0:
+            r = 360
+        else:
+            r = self.axes.longitude[ipl_lon[1][0]]
+        assert self.axes.longitude[ipl_lon[0][0]] <= longitude <= r
+
+        levels = np.zeros(self.shape[1:3])
+        for ipl in itertools.product(ipl_hour, ipl_lat, ipl_lon):
+            (hour_idx, lat_idx, lon_idx), lerps = zip(*ipl)
+            lerp = np.prod(lerps)
+            levels += lerp * self.array[hour_idx,:,:,lat_idx,lon_idx]
+
+
+        alt_idx = np.searchsorted(levels[:,0], altitude) - 1
+        alt_lerp_warning = False
+
+        if alt_idx == -1:
+            alt_idx += 1
+        if alt_idx == self.shape[1] - 1:
+            alt_idx -= 1
+
+        lower, upper = levels[(alt_idx, alt_idx + 1), :]
+        alt_lower, alt_upper = lower[0], upper[0]
+
+        step = upper[0] - lower[0]
+        assert step > 0
+        lerp = (altitude - lower[0]) / step
+
+        # allow the lerp to go out of range a bit - we don't have
+        # low-altitude data
+        if not -1 <= lerp <= 1:
+            raise OutOfRangeError("altitude", altitude)
+        if not 0 <= lerp <= 1:
+            warnings.warn(OutOfRangeWarning(altitude, lerp))
+
+        return tuple((1 - lerp) * lower[1:] + lerp * upper[1:])
 
     def __del__(self):
         self.close()

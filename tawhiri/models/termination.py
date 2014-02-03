@@ -57,7 +57,14 @@ class TerminationCondition(object):
 
 def landed_msl(x, t):
     """Simple "has the balloon landed" condition (non-positive altitude)"""
-    return x[2] < 0
+    return x[2] <= 0
+
+class BurstAltitude(TerminationCondition):
+    """Terminate as soon as the balloon reaches a certain altitude"""
+    def __init__(self, alt):
+        self.alt = alt
+    def __call__(self, x, t):
+        return x[2] >= self.alt
 
 class LandedGroundAltitude(TerminationCondition):
     """Not yet implemented"""

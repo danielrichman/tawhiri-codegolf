@@ -95,6 +95,9 @@ something like::
 
 Several configurations may be chained together, with one picking up
 and continuing the prediction after the previous one terminates.
+
+TODO: Should the solver yield the first point? This may mess up chained
+solvers (points being yielded twice); though that may not be an issue?
 """
 
 
@@ -126,6 +129,16 @@ class SolverWithAP(object):
     def __call__(self, initial_conditions, model, altitude_profile,
                        termination_condition):
         raise NotImplementedError
+
+
+def wrap_longitude(lon):
+    """Wrap longitude into the correct range (i.e., ``[0, 360)``)"""
+    if lon < 0:
+        lon += 360
+    if lon >= 360:
+        lon -= 360
+    assert 0 <= lon < 360
+    return lon
 
 
 class Configuration(object):
@@ -161,10 +174,9 @@ class Configuration(object):
 
     """
 
-    def __init__(self, solver, initial_conditions, model,
-                       termination_condition, altitude_profile=None):
+    def __init__(self, solver, model, termination_condition,
+                       altitude_profile=None):
         self.solver = solver
-        self.initial_conditions = initial_conditions
         self.model = model
         self.altitude_profile = altitude_profile
         self.termination_condition = termination_condition

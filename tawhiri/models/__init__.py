@@ -53,6 +53,8 @@ an exception (will probably) be raised.
 
 from __future__ import unicode_literals, print_function, division
 
+import numpy as np
+
 
 class Model(object):
     """
@@ -90,6 +92,5 @@ class LinearCombination(Model):
 
     def __call__(self, x, t):
         """Return the sum of the values returned by each `model`"""
-        tuples = [m(x, t) for m in self.models]
-        lat_dots, lon_dots, alt_dots = zip(tuples)
-        return (sum(lat_dots), sum(lon_dots), sum(alt_dots))
+        tuples = np.array([m(x, t) for m in self.models], dtype='float')
+        return np.sum(tuples, axis=0)

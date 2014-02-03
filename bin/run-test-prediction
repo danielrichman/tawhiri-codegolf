@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+import json
+
+import tawhiri.wind
+from tawhiri.solvers.forwards_euler import ForwardsEulerWithAP
+from tawhiri.models import LinearCombination
+from tawhiri.models.simple import Wind
+from tawhiri.models.termination import BurstAltitude
+from tawhiri.models.altitude_profiles import Linear
+from tawhiri.solvers import *
+
+(ds_time, _, _, _), = tawhiri.wind.Dataset.listdir("datasets")
+dataset = tawhiri.wind.Dataset("datasets", ds_time)
+
+solver = ForwardsEulerWithAP(dt=1)
+model = LinearCombination(Wind(dataset)) # just for show
+term_cond = BurstAltitude(alt=30000)
+alt_profile = Linear(5)
+
+config = Configuration(solver, model, term_cond, alt_profile)
+
+initial_conds = InitialConditions((52, 0, 0), datetime.utcnow())
+data = decimate(config.run(initial_conds), nth=60)
+
+dump = []
+
+for x, t in data:
+    print(x, t)
+    dump.append(list(x[0:2]))
+
+with open("/home/daniel/quick_map/data.js", "w") as f:
+    f.write("var data = ")
+    json.dump(dump, f)
+    f.write(";\n")

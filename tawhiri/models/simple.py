@@ -20,18 +20,28 @@
 
 from __future__ import unicode_literals, print_function, division
 
+import numpy as np
+
 from . import HorizontalModel
 
 
 class Wind(HorizontalModel):
     """A horizontal model that assumes the balloon moves at wind speed"""
 
+    _PI_180 = np.pi / 180
+    _180_PI = 180 / np.pi
+
     def __init__(self, dataset):
         self.dataset = dataset
 
     def __call__(self, x, t):
+        lat, lon, alt = x
+
         offset = (t.now - self.dataset.ds_time).total_seconds()
-        # TODO: implement tawhiri.wind.Dataset.get_wind(hour, alt, lat, lon)
-        wind_u, wind_v = self.dataset.get_wind(offset / 3600, x[2], x[0], x[1])
-        # TODO: convert wind_{u,v} to dl{at,on}/dt
-        return wind_u, wind_v, 0
+        wind_u, wind_v = self.dataset.interpolate(offset / 3600, lat, lon, alt)
+
+        R = 6371009 + alt
+        # arctan is approximately linear...
+        dlat = self._180_PI * wind_v / R
+        dlon = self._180_PI * wind_u / (R * np.cos(lat * self._PI_180))
+        return dlat, dlon, 0

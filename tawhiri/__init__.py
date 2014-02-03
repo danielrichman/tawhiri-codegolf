@@ -134,3 +134,7 @@ class Time(object):
         self.flight_time += other
         self.item_time += other
         return self
+
+    def __repr__(self):
+        return "<Time {0} {1} {2}>" \
+                .format(self.now, self.flight_time, self.item_time)
