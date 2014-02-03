@@ -210,23 +210,13 @@ class Dataset(object):
             left, (idx, lerp) = ipl_lon
             ipl_lon = left, (0, lerp)
 
-        assert self.axes.hour[ipl_hour[0][0]] <= hour <= self.axes.hour[ipl_hour[1][0]]
-        assert self.axes.latitude[ipl_lat[0][0]] <= latitude <= self.axes.latitude[ipl_lat[1][0]]
-        if ipl_lon[1][0] == 0:
-            r = 360
-        else:
-            r = self.axes.longitude[ipl_lon[1][0]]
-        assert self.axes.longitude[ipl_lon[0][0]] <= longitude <= r
-
         levels = np.zeros(self.shape[1:3])
         for ipl in itertools.product(ipl_hour, ipl_lat, ipl_lon):
             (hour_idx, lat_idx, lon_idx), lerps = zip(*ipl)
             lerp = np.prod(lerps)
             levels += lerp * self.array[hour_idx,:,:,lat_idx,lon_idx]
 
-
         alt_idx = np.searchsorted(levels[:,0], altitude) - 1
-        alt_lerp_warning = False
 
         if alt_idx == -1:
             alt_idx += 1
