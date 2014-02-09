@@ -5,27 +5,26 @@ module Dataset
 , get
 ) where
 
-import Data.Binary.Get
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSlz
 import Data.Time.Clock
 import Data.Time.Format
 import Control.Exception (assert)
+import Foreign.Ptr
+import Foreign.Storable
 import System.IO.MMap
 import System.FilePath.Posix (combine)
 import System.Locale
-import Unsafe.Coerce
+import System.IO.Unsafe
 
 import Variables
 
-data Dataset = Dataset { array :: BS.ByteString, time :: UTCTime }
+data Dataset = Dataset { array :: Ptr Double, time :: UTCTime }
 type Index = Int
 type Subscript = (Index, Index, Index, Index, Index)
 
 shape :: Subscript
 shape = (65, 47, 3, 361, 720)
-dsSize :: Index
-dsSize = a * b * c * d * e * 8
+arrayLen :: Index
+arrayLen = a * b * c * d * e
     where (a, b, c, d, e) = shape
 
 data Variable = Height | WindU | WindV deriving (Ord, Eq, Read, Show)
@@ -44,27 +43,29 @@ offset subscr =
         idc' = chkcnv szc idc
         idd' = chkcnv szd idd
         ide' = chkcnv sze ide
-        idx = ide' + sze * (idd' + szd * (idc' + szc * (idb' + szb * ida')))
-        off = idx * 8
+        off = ide' + sze * (idd' + szd * (idc' + szc * (idb' + szb * ida')))
     in
-        assert (0 <= off && off < dsSize) off
+        assert (0 <= off && off < arrayLen) off
     where chkcnv size idx = assert (idx >= 0 && idx < size) idx
 
 get :: Dataset -> Subscript -> Double
 get Dataset { array=arr } subscr =
-    let bytes = BSlz.pack . BS.unpack . BS.take 8 $ BS.drop (offset subscr) arr
-        word = runGet getWord64host bytes
-    in unsafeCoerce word :: Double
+    let off = offset subscr
+        action = peekElemOff arr off
+    in unsafePerformIO action
 
 fileName :: String -> UTCTime -> String
 fileName dir t = combine dir (formatTime defaultTimeLocale "%Y%m%d%H" t)
 
 open :: String -> UTCTime -> IO Dataset
 open directory dstime = do
+    -- XXX this doesn't work:
     -- let dsfrac = (floor $ realToFrac $ utctDayTime time
     --     dstime' = assert (dsfrac `mod` (3600 * 6) == 0) time
-    arr <- mmapFileByteString (fileName directory dstime) Nothing
-    let arr' = assert (BS.length arr == dsSize) arr
+    let filename = fileName directory dstime
+    -- XXX unmap
+    (arr, _, _, size) <- mmapFilePtr filename ReadOnly Nothing
+    let arr' = assert (size == arrayLen * sizeOf (0 :: Double)) arr
     return (Dataset arr' dstime)
 
 interpolate :: Dataset -> Position -> Time -> (Double, Double)
@@ -126,4 +127,3 @@ idxLerps3 hour latitude longitude = do
                 [left, (ridx, rlerp)] = pick 0 0.5 sz value
                 ridx2 = if ridx == szlon then 0 else ridx
             in [left, (ridx2, rlerp)]
-
