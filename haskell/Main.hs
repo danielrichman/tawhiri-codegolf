@@ -10,8 +10,12 @@ import Simple.AltitudeProfiles (linear)
 import Simple.TerminationConditions (burstAltitude)
 import Variables (InitialConditions(..), Position(..), Time)
 
-toDataJS :: [(Position, Time)] -> String
-toDataJS points = showJSArray (map restructure points) ""
+
+toJS :: [(Position, Time)] -> IO ()
+toJS points = do
+        putStr "var data = "
+        putStr $ showJSArray (map restructure points) ""
+        putStrLn ";"
     where restructure ((Position lat lon _), _) = JSArray [r lat, r lon]
           r v = JSRational False $ realToFrac v
 
@@ -28,8 +32,5 @@ main = do
         ics = InitialConditions (Position 52.2135 0.0964 0) launch 0
         soln = chain [config] ics
         decimated = decimateNth 60 soln
-    putStr "var data = "
-    putStr $ toDataJS decimated
-    putStrLn ";"
-    -- mapM_ (putStrLn . show) decimated
-    -- mapM_ (putStrLn . show . (\(Position lat lon _, _) -> [lat, lon])) decimated
+
+    toJS decimated
