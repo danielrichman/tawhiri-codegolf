@@ -94,7 +94,7 @@ interpolate dset (Position latitude longitude altitude) Time { now=now' } =
 
         interp4 idlps lower upper lerp variable =
             let f = interp3 idlps variable in
-            f lower * lerp + f upper * (1 - lerp)
+            f lower * (1 - lerp) + f upper * lerp
 
         search lower upper find func =
                 if lower == upper then lower
