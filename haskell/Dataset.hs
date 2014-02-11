@@ -7,17 +7,17 @@ module Dataset
 
 import Data.Time.Clock
 import Data.Time.Format
+import Data.Vector.Storable (Vector(..), unsafeFromForeignPtr, (!))
 import Control.Exception (assert)
 import Foreign.Ptr
 import Foreign.Storable
 import System.IO.MMap
 import System.FilePath.Posix (combine)
 import System.Locale
-import System.IO.Unsafe
 
 import Variables
 
-data Dataset = Dataset { array :: Ptr Double, time :: UTCTime }
+data Dataset = Dataset { vector :: Vector Double, time :: UTCTime }
 type Index = Int
 type Subscript = (Index, Index, Index, Index, Index)
 
@@ -49,24 +49,20 @@ offset subscr =
     where chkcnv size idx = assert (idx >= 0 && idx < size) idx
 
 get :: Dataset -> Subscript -> Double
-get Dataset { array=arr } subscr =
-    let off = offset subscr
-        action = peekElemOff arr off
-    in unsafePerformIO action
+get (Dataset vec _) subscr = vec ! offset subscr
 
 fileName :: String -> UTCTime -> String
 fileName dir t = combine dir (formatTime defaultTimeLocale "%Y%m%d%H" t)
 
 open :: String -> UTCTime -> IO Dataset
 open directory dstime = do
-    -- XXX this doesn't work:
-    -- let dsfrac = (floor $ realToFrac $ utctDayTime time
-    --     dstime' = assert (dsfrac `mod` (3600 * 6) == 0) time
-    let filename = fileName directory dstime
-    -- XXX unmap
-    (arr, _, _, size) <- mmapFilePtr filename ReadOnly Nothing
-    let arr' = assert (size == arrayLen * sizeOf (0 :: Double)) arr
-    return (Dataset arr' dstime)
+    let dsfrac = floor $ realToFrac $ utctDayTime dstime
+        dstime' = assert (dsfrac `mod` (3600 * 6) == 0) dstime
+        filename = fileName directory dstime'
+    (foreignPtr, offset, size) <- mmapFileForeignPtr filename ReadOnly Nothing
+    let size' = assert (size == arrayLen * sizeOf (undefined :: Double)) size
+        vector = unsafeFromForeignPtr foreignPtr offset arrayLen
+    return (Dataset vector dstime')
 
 interpolate :: Dataset -> Position -> Time -> (Double, Double)
 interpolate dset (Position latitude longitude altitude) Time { now=now' } =
