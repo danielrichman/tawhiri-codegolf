@@ -7,6 +7,7 @@ module Variables
 , Time(..)
 , InitialConditions(..)
 , (.+)
+, (.*)
 , replaceAltitude
 , fromDelta2D
 , timeAfterICs
@@ -23,9 +24,11 @@ data Delta3D = Delta3D Double Double Altitude deriving (Show, Read, Eq)
 data Delta2D = Delta2D Double Double deriving (Show, Read, Eq)
 
 infixl 6 .+
+infixl 7 .*
 
 class (Monoid a) => Delta a where
     (.+) :: Position -> a -> Position
+    (.*) :: a -> Double -> a
 
 instance Monoid Delta3D where
     mempty = Delta3D 0 0 0
@@ -37,6 +40,7 @@ instance Delta Delta3D where
     posn .+ delta = Position (lat + dlat) (lon + dlon) (alt + dalt)
         where Position lat lon alt = posn
               Delta3D dlat dlon dalt = delta
+    Delta3D dlat dlon dalt .* s = Delta3D (dlat * s) (dlon * s) (dalt * s)
 
 instance Monoid Delta2D where
     mempty = Delta2D 0 0
@@ -48,6 +52,7 @@ instance Delta Delta2D where
     posn .+ delta = Position (lat + dlat) (lon + dlon) alt
         where Position lat lon alt = posn
               Delta2D dlat dlon = delta
+    Delta2D dlat dlon .* s = Delta2D (dlat * s) (dlon * s)
 
 replaceAltitude :: Position -> Altitude -> Position
 replaceAltitude (Position lat lon _) alt =

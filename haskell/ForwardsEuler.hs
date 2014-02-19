@@ -9,7 +9,7 @@ forwardsEuler h model termcond initconds = start : step start
           step (x, t) =
             if termcond x t then [] else
                 let x_dot = model x t
-                    next = (x .+ x_dot, t ..+ h)
+                    next = (x .+ x_dot .* h, t ..+ h)
                 in
                     next : step next
 
@@ -19,7 +19,7 @@ forwardsEulerWithAP h model altprof termcond initconds = start : step start
           step (x, t) =
             if termcond x t then [] else
                 let x_dot = model x t
-                    x' = replaceAltitude (x .+ x_dot) $ altprof t
+                    x' = replaceAltitude (x .+ x_dot .* h) $ altprof t
                     next = (x', t ..+ h)
                 in
                     next : step next
