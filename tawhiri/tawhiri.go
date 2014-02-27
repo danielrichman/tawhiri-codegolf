@@ -11,11 +11,10 @@ type Delta struct {
     DLat, DLon, DAlt float64
 }
 
-func (p Position) Add(d Delta) (o Position) {
-    o.Lat = p.Lat + d.DLat
-    o.Lon = p.Lon + d.DLon
-    o.Alt = p.Alt + d.DAlt
-    return
+func (p *Position) Add(d Delta) {
+    p.Lat += d.DLat
+    p.Lon += d.DLon
+    p.Alt += d.DAlt
 }
 
 func WrapLongitude(lon float64) float64 {
@@ -28,18 +27,17 @@ func WrapLongitude(lon float64) float64 {
     return lon
 }
 
-func (d Delta) Add(e Delta) (o Delta) {
-    o.DLat = d.DLat + e.DLat
-    o.DLon = d.DLon + e.DLon
-    o.DAlt = d.DAlt + e.DAlt
+func (d *Delta) Add(e Delta) {
+    d.DLat += e.DLat
+    d.DLon += e.DLon
+    d.DAlt += e.DAlt
     return
 }
 
-func (d Delta) Scale(fac float64) (o Delta) {
-    o.DLat = d.DLat * fac
-    o.DLon = d.DLon * fac
-    o.DAlt = d.DAlt * fac
-    return
+func (d *Delta) Scale(fac float64) {
+    d.DLat *= fac
+    d.DLon *= fac
+    d.DAlt *= fac
 }
 
 type Time struct {
@@ -48,11 +46,10 @@ type Time struct {
     ItemTime float64
 }
 
-func (t Time) Add(seconds float64) (o Time) {
-    o.Now = t.Now.Add(time.Duration(seconds) * time.Second)
-    o.FlightTime = t.FlightTime + seconds
-    o.ItemTime = t.FlightTime + seconds
-    return
+func (t *Time) Add(seconds float64) {
+    t.Now = t.Now.Add(time.Duration(seconds) * time.Second)
+    t.FlightTime += seconds
+    t.ItemTime += seconds
 }
 
 type State struct {
@@ -75,7 +72,7 @@ type LinearCombination struct {
 
 func (c LinearCombination) Eval(state State) (o Delta) {
     for _, m := range c.Models {
-        o = o.Add(m.Eval(state))
+        o.Add(m.Eval(state))
     }
     return
 }
