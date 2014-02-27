@@ -10,8 +10,6 @@ import (
 )
 
 func main() {
-    start := time.Now()
-
     ds_time := time.Date(2014, 02, 18, 12, 0, 0, 0, time.UTC)
     ds := dataset.Open(ds_time, "/opt/wind")
 
@@ -23,22 +21,19 @@ func main() {
     launch_time := time.Date(2014, 02, 19, 15, 0, 0, 0, time.UTC)
     ics := tawhiri.InitialConditions(launch_time, 52.2135, 0.0964, 0)
 
-    fmt.Println("Setup took", time.Now().Sub(start))
+    pipe := make(chan tawhiri.State, 100)
+    out := make(chan tawhiri.State, 100)
 
-    loopstart := time.Now()
+    go chain.Run(ics, pipe)
+    go tawhiri.Decimate(60, pipe, out)
 
-    for i := 0; i < 100; i++ {
-        pipe := make(chan tawhiri.State, 100)
-        out := make(chan tawhiri.State, 100)
+    fmt.Printf("var data = [")
 
-        go chain.Run(ics, pipe)
-        go tawhiri.Decimate(60, pipe, out)
-
-        for _ = range out {
-        }
+    point := <-out
+    fmt.Printf("[%.15f, %.15f]", point.Lat, point.Lon)
+    for point := range out {
+        fmt.Printf(",[%.15f, %.15f]", point.Lat, point.Lon)
     }
 
-    took := time.Now().Sub(loopstart)
-
-    fmt.Println("100 iterations", took, "total", took / 100, "avg")
+    fmt.Printf("];\n")
 }
