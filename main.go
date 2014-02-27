@@ -19,7 +19,6 @@ func main() {
     termcond := models.BurstAltitude{30000}
     solver := solvers.ForwardsEuler{1}
     config := tawhiri.Configuration{model, termcond, solver}
-    chain := tawhiri.Chain{config}
     launch_time := time.Date(2014, 02, 19, 15, 0, 0, 0, time.UTC)
     ics := tawhiri.InitialConditions(launch_time, 52.2135, 0.0964, 0)
 
@@ -28,7 +27,7 @@ func main() {
     loopstart := time.Now()
 
     for i := 0; i < 100; i++ {
-        for _ = range chain.Run(ics) {
+        for _ = range config.Run(ics) {
         }
     }
 
