@@ -93,10 +93,13 @@ interpolate dset (Position latitude longitude altitude) Time { now=now' } =
             f lower * (1 - lerp) + f upper * lerp
 
         search lower upper find func =
+            -- TODO: put an assert(?) in to check this actually finds values
+            -- in the right range (though we allow them to be slightly out,
+            -- see python)
                 if lower == upper then lower
-                else if find <= test then search lower mid find func
-                else search (mid + 1) upper find func
-            where mid = (lower + upper) `div` 2
+                else if find <= test then search lower (mid - 1) find func
+                else search mid upper find func
+            where mid = (lower + upper + 1) `div` 2
                   test = func mid
 
 -- (indexes, product of lerps)
