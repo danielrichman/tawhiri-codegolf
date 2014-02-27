@@ -21,14 +21,14 @@ toJS points = do
 
 main :: IO ()
 main = do
-    let dir = "/var/www/predict/tawhiri/datasets/"
-    dataset <- open dir $ read "2014-02-09 12:00:00"
+    let dir = "/opt/wind/"
+    dataset <- open dir $ read "2014-02-18 12:00:00"
     let model = linearCombination [wind dataset]
         ap = linear 0 5
         termcond = burstAltitude 30000
         solver = forwardsEulerWithAP 1
         config = solver model ap termcond
-        launch = read "2014-02-09 21:00:00"
+        launch = read "2014-02-19 15:00:00"
         ics = InitialConditions (Position 52.2135 0.0964 0) launch 0
         soln = chain [config] ics
         decimated = decimateNth 60 soln
