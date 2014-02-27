@@ -28,11 +28,7 @@ func main() {
     loopstart := time.Now()
 
     for i := 0; i < 100; i++ {
-        out := make(chan tawhiri.State, 100)
-
-        go chain.Run(ics, out)
-
-        for _ = range out {
+        for _ = range chain.Run(ics) {
         }
     }
 

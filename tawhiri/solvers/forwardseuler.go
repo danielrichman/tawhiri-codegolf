@@ -6,10 +6,10 @@ type ForwardsEuler struct {
     Step float64
 }
 
-func (fe ForwardsEuler) Run(model tawhiri.Model, tc tawhiri.TerminationCondition, ics tawhiri.State, out chan tawhiri.State) {
+func (fe ForwardsEuler) Run(model tawhiri.Model, tc tawhiri.TerminationCondition, ics tawhiri.State) (out []tawhiri.State) {
     state := ics
     i := 0
-    out <- state
+    out = append(out, state)
 
     for !tc.Eval(state) {
         x_dot := model.Eval(state).Scale(fe.Step)
@@ -17,11 +17,10 @@ func (fe ForwardsEuler) Run(model tawhiri.Model, tc tawhiri.TerminationCondition
         state.Lon = tawhiri.WrapLongitude(state.Lon)
 
         if i % 60 == 0 {
-            out <- state
+            out = append(out, state)
         }
         i += 1
     }
 
-    close(out)
+    return
 }
-

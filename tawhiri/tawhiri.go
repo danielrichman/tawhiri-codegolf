@@ -82,7 +82,7 @@ func (c LinearCombination) Eval(state State) (o Delta) {
 
 // Solvers
 type Solver interface {
-    Run(Model, TerminationCondition, State, chan State)
+    Run(Model, TerminationCondition, State) []State
 }
 
 type Configuration struct {
@@ -91,32 +91,23 @@ type Configuration struct {
     Solver Solver
 }
 
-func (c Configuration) Run(ics State, out chan State) {
-    c.Solver.Run(c.Model, c.TerminationCondition, ics, out)
+func (c Configuration) Run(ics State) []State {
+    return c.Solver.Run(c.Model, c.TerminationCondition, ics)
 }
 
 type Chain []Configuration
 
-func (cs Chain) Run(ics State, out chan State) {
-    out <- ics
+func (cs Chain) Run(ics State) (out []State) {
+    out = append(out, ics)
 
     for _, c := range cs {
-        pipe := make(chan State, 100)
-        go c.Run(ics, pipe)
-
         // drop the first point (don't repeat it)
-        <-pipe
+        out = append(out, c.Run(ics)[1:]...)
 
-        var point State
-        for point = range pipe {
-            out <- point
-        }
-
-        ics = point
+        ics = out[len(out) - 1]
         ics.ItemTime = 0
     }
-
-    close(out)
+    return
 }
 
 // Convenience functions
