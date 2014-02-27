@@ -119,7 +119,7 @@ idxLerps3 hour latitude longitude = do
         pickhr = pick 0 3 $ fromIntegral szhr
         picklat = pick (-90) 0.5 $ fromIntegral szlat
         picklon value =
-            let sz = fromIntegral szlon
+            let sz = fromIntegral szlon + 1
                 [left, (ridx, rlerp)] = pick 0 0.5 sz value
                 ridx2 = if ridx == szlon then 0 else ridx
             in [left, (ridx2, rlerp)]

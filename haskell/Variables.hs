@@ -8,6 +8,7 @@ module Variables
 , InitialConditions(..)
 , (.+)
 , (.*)
+, wrapLongitude
 , replaceAltitude
 , fromDelta2D
 , timeAfterICs
@@ -15,6 +16,7 @@ module Variables
 ) where
 
 import Data.Monoid
+import Data.Fixed
 import Data.Time.Clock
 import Data.Time.Format()
 
@@ -53,6 +55,11 @@ instance Delta Delta2D where
         where Position lat lon alt = posn
               Delta2D dlat dlon = delta
     Delta2D dlat dlon .* s = Delta2D (dlat * s) (dlon * s)
+
+wrapLongitude :: Position -> Position
+wrapLongitude (Position lat lon alt) = Position lat lon' alt
+    where lon' = let t = lon `mod'` 360 in
+                 if t < 0 then t + 360 else t
 
 replaceAltitude :: Position -> Altitude -> Position
 replaceAltitude (Position lat lon _) alt =
