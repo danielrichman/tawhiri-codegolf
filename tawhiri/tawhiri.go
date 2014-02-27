@@ -119,22 +119,6 @@ func (cs Chain) Run(ics State, out chan State) {
     close(out)
 }
 
-func Decimate(n int, in, out chan State) {
-    i := 0
-    var point State
-    for point = range in {
-        if i % n == 0 {
-            out <- point
-        }
-        i += 1
-    }
-    // always emit the last point
-    if i % n != 1 {
-        out <- point
-    }
-    close(out)
-}
-
 // Convenience functions
 func InitialConditions(t time.Time, lat, lon, alt float64) State {
     return State{Time{t, 0, 0}, Position{lat, lon, alt}}

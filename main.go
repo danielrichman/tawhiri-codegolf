@@ -28,11 +28,9 @@ func main() {
     loopstart := time.Now()
 
     for i := 0; i < 100; i++ {
-        pipe := make(chan tawhiri.State, 100)
         out := make(chan tawhiri.State, 100)
 
-        go chain.Run(ics, pipe)
-        go tawhiri.Decimate(60, pipe, out)
+        go chain.Run(ics, out)
 
         for _ = range out {
         }
