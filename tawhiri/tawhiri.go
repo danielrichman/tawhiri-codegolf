@@ -51,7 +51,7 @@ type Time struct {
 func (t Time) Add(seconds float64) (o Time) {
     o.Now = t.Now.Add(time.Duration(seconds) * time.Second)
     o.FlightTime = t.FlightTime + seconds
-    o.ItemTime = t.FlightTime + seconds
+    o.ItemTime = t.ItemTime + seconds
     return
 }
 
