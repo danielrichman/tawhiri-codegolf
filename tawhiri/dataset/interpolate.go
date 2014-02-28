@@ -9,7 +9,7 @@ func (ds *Dataset) Interpolate(abstime time.Time, lat, lon, alt float64) (float6
 
     altidx := search(ds, lerps, alt)
     lower := interp3(ds, lerps, height, altidx)
-    upper := interp3(ds, lerps, height, altidx + 1)
+    upper := interp3(ds, lerps, height, altidx+1)
 
     lerp := 0.5
     if lower != upper {
@@ -24,18 +24,18 @@ func (ds *Dataset) Interpolate(abstime time.Time, lat, lon, alt float64) (float6
 
 type lerp1 struct {
     index int
-    lerp float64
+    lerp  float64
 }
 
 type lerp3 struct {
     hour, lat, lon int
-    lerp float64
+    lerp           float64
 }
 
 func pick(left float64, step float64, n int, value float64) [2]lerp1 {
     a := (value - left) / step
     b := int(a)
-    if b < 0 || b >= n - 1 {
+    if b < 0 || b >= n-1 {
         panic("value out of range")
     }
     l := a - float64(b)
@@ -45,7 +45,7 @@ func pick(left float64, step float64, n int, value float64) [2]lerp1 {
 func pick3(hour, lat, lon float64) (lerps [8]lerp3) {
     lhour := pick(0, 3, 65, hour)
     llat := pick(-90, 0.5, 361, lat)
-    llon := pick(0, 0.5, 720 + 1, lon)
+    llon := pick(0, 0.5, 720+1, lon)
     if llon[1].index == 720 {
         llon[1].index = 0
     }
@@ -90,6 +90,6 @@ func search(ds *Dataset, lerps [8]lerp3, target float64) int {
 func interp4(ds *Dataset, lerps [8]lerp3, alt_lerp lerp1, variable int) float64 {
     lower := interp3(ds, lerps, variable, alt_lerp.index)
     // and we can infer what the other lerp1 is:
-    upper := interp3(ds, lerps, variable, alt_lerp.index + 1)
-    return lower * alt_lerp.lerp + upper * (1 - alt_lerp.lerp)
+    upper := interp3(ds, lerps, variable, alt_lerp.index+1)
+    return lower*alt_lerp.lerp + upper*(1-alt_lerp.lerp)
 }

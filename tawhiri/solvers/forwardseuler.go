@@ -19,4 +19,3 @@ func (fe ForwardsEuler) Run(model tawhiri.Model, tc tawhiri.TerminationCondition
 
     close(out)
 }
-

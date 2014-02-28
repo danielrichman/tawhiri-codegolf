@@ -6,8 +6,8 @@ package dataset
 import "C"
 
 import (
-    "os"
     "errors"
+    "os"
     "unsafe"
 )
 
@@ -19,7 +19,7 @@ func mmap(file *os.File) (unsafe.Pointer, int64, error) {
     size := fi.Size()
 
     data, _ := C.mmap(nil, C.size_t(size), C.PROT_READ, C.MAP_SHARED,
-                      C.int(file.Fd()), 0)
+        C.int(file.Fd()), 0)
     if data == nil {
         // do something with errno
         return nil, 0, errors.New("map failed")

@@ -43,9 +43,9 @@ func (d Delta) Scale(fac float64) (o Delta) {
 }
 
 type Time struct {
-    Now time.Time
+    Now        time.Time
     FlightTime float64
-    ItemTime float64
+    ItemTime   float64
 }
 
 func (t Time) Add(seconds float64) (o Time) {
@@ -86,9 +86,9 @@ type Solver interface {
 }
 
 type Configuration struct {
-    Model Model
+    Model                Model
     TerminationCondition TerminationCondition
-    Solver Solver
+    Solver               Solver
 }
 
 func (c Configuration) Run(ics State, out chan State) {
@@ -123,13 +123,13 @@ func Decimate(n int, in, out chan State) {
     i := 0
     var point State
     for point = range in {
-        if i % n == 0 {
+        if i%n == 0 {
             out <- point
         }
         i += 1
     }
     // always emit the last point
-    if i % n != 1 {
+    if i%n != 1 {
         out <- point
     }
     close(out)

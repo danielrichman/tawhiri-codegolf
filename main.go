@@ -1,12 +1,12 @@
 package main
 
 import (
-    "fmt"
-    "time"
     "./tawhiri"
     "./tawhiri/dataset"
     "./tawhiri/models"
     "./tawhiri/solvers"
+    "fmt"
+    "time"
 )
 
 func main() {
@@ -40,5 +40,5 @@ func main() {
 
     took := time.Now().Sub(loopstart)
 
-    fmt.Println("100 iterations", took, "total", took / 100, "avg")
+    fmt.Println("100 iterations", took, "total", took/100, "avg")
 }

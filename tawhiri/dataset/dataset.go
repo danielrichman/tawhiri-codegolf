@@ -8,17 +8,18 @@ import (
 )
 
 type array [65][47][3][361][720]float64
+
 const ds_size = int64(unsafe.Sizeof(array{}))
 
 const (
     height = 0
-    windu = 1
-    windv = 2
+    windu  = 1
+    windv  = 2
 )
 
 type Dataset struct {
     Array *array
-    When time.Time
+    When  time.Time
 }
 
 func init() {
