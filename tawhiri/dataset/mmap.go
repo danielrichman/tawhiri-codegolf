@@ -11,7 +11,7 @@ import (
     "unsafe"
 )
 
-func mmap(file *os.File) (unsafe.Pointer, int64, error) {
+func Mmap(file *os.File) (unsafe.Pointer, int64, error) {
     fi, err := file.Stat()
     if err != nil {
         return nil, 0, err
