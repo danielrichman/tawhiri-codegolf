@@ -1,4 +1,4 @@
-package dataset
+package main
 
 /*
 #include <sys/mman.h>
@@ -11,7 +11,7 @@ import (
     "unsafe"
 )
 
-func Mmap(file *os.File) (unsafe.Pointer, int64, error) {
+func mmap(file *os.File) (unsafe.Pointer, int64, error) {
     fi, err := file.Stat()
     if err != nil {
         return nil, 0, err
