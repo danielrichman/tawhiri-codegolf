@@ -73,7 +73,15 @@ func interp3(ds *Dataset, lerps [8]lerp3, variable, level int) float64 {
     return r
 }
 
+var level_cache = -1
+
 func search(ds *Dataset, lerps [8]lerp3, target float64) int {
+    if level_cache >= 0 && level_cache <= 45 {
+        if interp3(ds, lerps, height, level_cache) <= target && interp3(ds, lerps, height, level_cache + 1) >= target {
+            return level_cache
+        }
+    }
+
     lower, upper := 0, 45
     for lower < upper {
         mid := (lower + upper + 1) / 2
@@ -84,6 +92,7 @@ func search(ds *Dataset, lerps [8]lerp3, target float64) int {
             lower = mid
         }
     }
+    level_cache = lower
     return lower
 }
 
