@@ -8,7 +8,6 @@ import (
     "time"
     "unsafe"
 )
-import "./tawhiri/dataset"
 
 // Variables
 type Position struct {
@@ -17,13 +16,6 @@ type Position struct {
 
 type Delta struct {
     DLat, DLon, DAlt float64
-}
-
-func (p Position) Add(d Delta) (o Position) {
-    o.Lat = p.Lat + d.DLat
-    o.Lon = p.Lon + d.DLon
-    o.Alt = p.Alt + d.DAlt
-    return
 }
 
 func WrapLongitude(lon float64) float64 {
@@ -36,31 +28,10 @@ func WrapLongitude(lon float64) float64 {
     return lon
 }
 
-func (d Delta) Add(e Delta) (o Delta) {
-    o.DLat = d.DLat + e.DLat
-    o.DLon = d.DLon + e.DLon
-    o.DAlt = d.DAlt + e.DAlt
-    return
-}
-
-func (d Delta) Scale(fac float64) (o Delta) {
-    o.DLat = d.DLat * fac
-    o.DLon = d.DLon * fac
-    o.DAlt = d.DAlt * fac
-    return
-}
-
 type Time struct {
     Now        time.Time
     FlightTime float64
     ItemTime   float64
-}
-
-func (t Time) Add(seconds float64) (o Time) {
-    o.Now = t.Now.Add(time.Duration(seconds) * time.Second)
-    o.FlightTime = t.FlightTime + seconds
-    o.ItemTime = t.FlightTime + seconds
-    return
 }
 
 type State struct {
@@ -81,9 +52,12 @@ type LinearCombination struct {
     Models []Model
 }
 
-func (c LinearCombination) Eval(state State) (o Delta) {
+func (c LinearCombination) Eval(state State) (d Delta) {
     for _, m := range c.Models {
-        o = o.Add(m.Eval(state))
+        e := m.Eval(state)
+        d.DLat += e.DLat
+        d.DLon += e.DLon
+        d.DAlt += e.DAlt
     }
     return
 }
@@ -187,7 +161,7 @@ func Open(when time.Time, directory string) Dataset {
         panic(err)
     }
 
-    data, size, err := dataset.Mmap(file)
+    data, size, err := mmap(file)
     if err != nil {
         panic(err)
     }
@@ -352,8 +326,13 @@ func (fe ForwardsEuler) Run(model Model, tc TerminationCondition, ics State, out
     out <- state
 
     for !tc.Eval(state) {
-        x_dot := model.Eval(state).Scale(fe.Step)
-        state = State{state.Time.Add(fe.Step), state.Position.Add(x_dot)}
+        x_dot := model.Eval(state)
+        state.Lat += x_dot.DLat * fe.Step
+        state.Lon += x_dot.DLon * fe.Step
+        state.Alt += x_dot.DAlt * fe.Step
+        state.Now = state.Now.Add(time.Duration(fe.Step) * time.Second)
+        state.FlightTime += fe.Step
+        state.ItemTime += fe.Step
         state.Lon = WrapLongitude(state.Lon)
         out <- state
     }
