@@ -7,7 +7,7 @@ import (
     "unsafe"
 )
 
-type array [65][47][3][361][720]float64
+type array [65][47][3][361][720]float32
 
 const ds_size = int64(unsafe.Sizeof(array{}))
 
@@ -23,7 +23,7 @@ type Dataset struct {
 }
 
 func init() {
-    if ds_size != 19057334400 {
+    if ds_size != 19057334400/2 {
         panic("dataset array type has incorrect size")
     }
 }

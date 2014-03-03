@@ -13,7 +13,7 @@ func main() {
     start := time.Now()
 
     ds_time := time.Date(2014, 02, 18, 12, 0, 0, 0, time.UTC)
-    ds := dataset.Open(ds_time, "/opt/wind")
+    ds := dataset.Open(ds_time, "/opt/wind32")
 
     model := tawhiri.MakeLinearCombination(models.Wind{ds}, models.Linear{5})
     termcond := models.BurstAltitude{30000}

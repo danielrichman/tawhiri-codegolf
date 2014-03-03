@@ -67,7 +67,7 @@ func pick3(hour, lat, lon float64) (lerps [8]lerp3) {
 func interp3(ds *Dataset, lerps [8]lerp3, variable, level int) float64 {
     r := 0.0
     for _, lerp := range lerps {
-        v := ds.Array[lerp.hour][level][variable][lerp.lat][lerp.lon]
+        v := float64(ds.Array[lerp.hour][level][variable][lerp.lat][lerp.lon])
         r += v * lerp.lerp
     }
     return r
